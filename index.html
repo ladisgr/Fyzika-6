@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Fyzikální laboratoř – 6. ročník</title>
+  <style>
+    :root {
+      --ink: #162536;
+      --muted: #5d6b78;
+      --paper: #f8faf9;
+      --white: #ffffff;
+      --line: #cdd8d8;
+      --teal: #087f78;
+      --teal-dark: #075f5b;
+      --teal-soft: #e1f2ef;
+      --yellow: #f4c95d;
+      --yellow-soft: #fff5cf;
+      --red: #ad3f48;
+      --red-soft: #fcebed;
+      --green: #237a4b;
+      --green-soft: #e6f4eb;
+      --shadow: 0 12px 36px rgba(28, 53, 67, .10);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: #edf3f1;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .58; }
+    :focus-visible { outline: 3px solid #e8ad19; outline-offset: 3px; }
+
+    .app-shell { min-height: 100vh; }
+
+    .topbar {
+      background: var(--ink);
+      color: white;
+      padding: 14px clamp(18px, 4vw, 54px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      width: 38px; height: 38px; flex: 0 0 auto; border: 2px solid var(--yellow);
+      border-radius: 50%; position: relative;
+    }
+    .brand-mark::before, .brand-mark::after {
+      content: ""; position: absolute; left: 7px; top: 16px; width: 20px; height: 2px;
+      background: var(--yellow); transform: rotate(45deg);
+    }
+    .brand-mark::after { transform: rotate(-45deg); }
+    .brand-mark i {
+      position: absolute; width: 7px; height: 7px; border-radius: 50%;
+      background: white; left: 14px; top: 14px;
+    }
+    .brand strong { display: block; font-size: 1rem; letter-spacing: 0; }
+    .brand span { color: #c5d4d8; font-size: .82rem; }
+
+    .top-progress { width: min(34vw, 330px); }
+    .progress-label { display: flex; justify-content: space-between; font-size: .78rem; color: #d4e0e2; margin-bottom: 5px; }
+    .progress-track { height: 8px; border-radius: 4px; background: #40505f; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0; background: var(--yellow); transition: width .35s ease; }
+
+    .welcome {
+      min-height: calc(100vh - 66px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+      align-items: center;
+      gap: clamp(38px, 7vw, 100px);
+      padding: clamp(36px, 7vw, 90px) clamp(20px, 7vw, 100px);
+      max-width: 1400px;
+      margin: auto;
+    }
+
+    .welcome-copy { animation: arrive .55s ease both; }
+    .eyebrow { color: var(--teal-dark); font-weight: 800; font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; }
+    h1 { font-size: clamp(2.2rem, 5vw, 4.6rem); line-height: 1.02; letter-spacing: 0; margin: 12px 0 20px; max-width: 770px; }
+    .lead { max-width: 650px; color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.2rem); }
+    .topic-line { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 26px 0 30px; color: #384b57; font-weight: 650; }
+    .topic-line span::before { content: "•"; color: var(--teal); margin-right: 8px; }
+
+    .primary, .secondary, .ghost {
+      border: 0; border-radius: 6px; min-height: 48px; padding: 11px 20px; font-weight: 800;
+      transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+    .primary { color: white; background: var(--teal); box-shadow: 0 6px 0 #05635e; }
+    .primary:hover:not(:disabled) { background: #096f69; transform: translateY(-1px); }
+    .primary:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 3px 0 #05635e; }
+    .secondary { color: var(--teal-dark); background: var(--teal-soft); border: 1px solid #a7d2cd; }
+    .ghost { color: #40525e; background: transparent; border: 1px solid var(--line); }
+
+    .atom-stage {
+      min-height: 440px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      animation: arrive .55s .12s ease both;
+    }
+    .atom-label { position: absolute; right: 2%; top: 8%; max-width: 180px; color: var(--muted); font-size: .86rem; }
+    .atom { position: relative; width: min(38vw, 390px); aspect-ratio: 1; }
+    .orbit { position: absolute; inset: 16%; border: 2px solid rgba(8,127,120,.48); border-radius: 50%; }
+    .orbit:nth-child(1) { transform: rotate(0deg) scaleY(.42); }
+    .orbit:nth-child(2) { transform: rotate(60deg) scaleY(.42); }
+    .orbit:nth-child(3) { transform: rotate(-60deg) scaleY(.42); }
+    .nucleus { position: absolute; inset: 39%; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 11px rgba(244,201,93,.33); }
+    .nucleus::before, .nucleus::after { content: "+"; position: absolute; color: white; font-weight: 900; font-size: 1.3rem; }
+    .nucleus::before { left: 22%; top: 15%; }
+    .nucleus::after { right: 20%; bottom: 10%; }
+    .electron { position: absolute; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--teal); color: white; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+    .e1 { left: 10%; top: 46%; animation: float 3.4s ease-in-out infinite; }
+    .e2 { right: 17%; top: 22%; animation: float 3.4s .7s ease-in-out infinite; }
+    .e3 { right: 16%; bottom: 20%; animation: float 3.4s 1.4s ease-in-out infinite; }
+
+    .quiz-layout {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 52px) 54px;
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: clamp(24px, 4vw, 48px);
+    }
+
+    .navigator { align-self: start; position: sticky; top: 24px; }
+    .navigator h2 { margin: 0 0 12px; font-size: .86rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+    .question-dots { display: grid; grid-template-columns: repeat(5, 34px); gap: 8px; }
+    .dot {
+      width: 34px; height: 34px; padding: 0; border-radius: 5px; border: 1px solid var(--line);
+      background: white; color: var(--ink); font-size: .8rem; font-weight: 800;
+    }
+    .dot.current { border: 3px solid var(--teal); }
+    .dot.done { background: var(--green-soft); border-color: #8dc4a4; color: var(--green); }
+    .dot.wrong { background: var(--red-soft); border-color: #dfa3a8; color: var(--red); }
+    .legend { margin-top: 20px; color: var(--muted); font-size: .78rem; }
+    .legend div { margin: 6px 0; }
+    .legend i { width: 11px; height: 11px; display: inline-block; border-radius: 2px; margin-right: 7px; vertical-align: -1px; }
+
+    .question-panel {
+      background: var(--white);
+      border: 1px solid #d7e0df;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      min-height: 560px;
+    }
+    .question-head { padding: 26px clamp(22px, 4vw, 42px) 17px; border-bottom: 1px solid #e1e7e6; }
+    .question-meta { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: .85rem; }
+    .category { color: var(--teal-dark); font-weight: 800; }
+    .question-body { padding: 27px clamp(22px, 4vw, 42px) 34px; }
+    .question-body h2 { font-size: clamp(1.35rem, 2.6vw, 2rem); line-height: 1.25; margin: 0 0 12px; letter-spacing: 0; }
+    .instruction { color: var(--muted); margin: 0 0 22px; }
+
+    .visual-box { background: #f1f6f4; border-left: 4px solid var(--teal); padding: 18px; margin: 0 0 22px; border-radius: 0 5px 5px 0; }
+    .particles { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px; min-height: 94px; }
+    .particle { width: 25px; height: 25px; border-radius: 50%; background: var(--teal); border: 3px solid #b7ded9; }
+    .particles.gas { justify-content: space-between; gap: 34px; padding: 0 14px; }
+    .particles.liquid { max-width: 330px; margin: auto; gap: 4px; align-content: end; padding-top: 35px; }
+    .particles.solid { max-width: 220px; margin: auto; display: grid; grid-template-columns: repeat(5, 25px); }
+    .measure-line { position: relative; width: min(100%, 410px); height: 86px; margin: auto; border-bottom: 3px solid #4b606c; }
+    .tick { position: absolute; bottom: -31px; width: 2px; height: 22px; background: #4b606c; font-size: .76rem; }
+    .tick.major { height: 34px; }
+    .tick span { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+    .tick.major span { top: 37px; }
+    .pointer { position: absolute; left: 62.5%; bottom: 0; width: 3px; height: 62px; background: var(--red); transform: translateX(-1px); }
+    .pointer::before { content: ""; position: absolute; bottom: -2px; left: -5px; border: 6px solid transparent; border-bottom-color: var(--red); }
+
+    .options { display: grid; gap: 11px; }
+    .option {
+      width: 100%; text-align: left; border: 1px solid var(--line); background: #fbfcfc;
+      border-radius: 6px; padding: 14px 16px; min-height: 54px; color: var(--ink);
+      display: flex; align-items: center; gap: 12px; transition: border .15s, background .15s, transform .15s;
+    }
+    .option:hover:not(:disabled) { border-color: var(--teal); transform: translateX(2px); }
+    .option.selected { background: var(--teal-soft); border: 2px solid var(--teal); padding: 13px 15px; }
+    .option.correct { background: var(--green-soft); border: 2px solid var(--green); padding: 13px 15px; }
+    .option.incorrect { background: var(--red-soft); border: 2px solid var(--red); padding: 13px 15px; }
+    .choice-mark { width: 26px; height: 26px; flex: 0 0 auto; border: 2px solid #9eaeae; border-radius: 50%; display: grid; place-items: center; font-size: .8rem; font-weight: 900; }
+    .multi .choice-mark { border-radius: 4px; }
+    .selected .choice-mark { background: var(--teal); border-color: var(--teal); color: white; }
+
+    .text-answer { width: 100%; border: 2px solid var(--line); border-radius: 6px; padding: 13px; color: var(--ink); background: #fff; }
+    textarea.text-answer { min-height: 132px; resize: vertical; }
+    .text-answer:focus { border-color: var(--teal); outline: 3px solid #b9ded9; }
+    .unit-row { display: flex; align-items: center; gap: 10px; max-width: 440px; }
+    .unit-row .text-answer { flex: 1; }
+    .unit-badge { font-size: 1.05rem; font-weight: 800; }
+
+    .sort-list { display: grid; gap: 8px; }
+    .sort-item { display: grid; grid-template-columns: 34px 1fr 42px 42px; align-items: center; gap: 8px; padding: 10px; background: #f5f8f7; border: 1px solid var(--line); border-radius: 5px; }
+    .sort-index { font-weight: 900; color: var(--teal-dark); text-align: center; }
+    .move { border: 1px solid #b7c5c4; background: white; width: 38px; height: 38px; border-radius: 5px; font-weight: 900; color: var(--ink); }
+
+    .feedback { margin-top: 22px; padding: 16px 18px; border-radius: 6px; border-left: 5px solid; }
+    .feedback.good { background: var(--green-soft); border-color: var(--green); }
+    .feedback.try { background: var(--yellow-soft); border-color: #b37c00; }
+    .feedback.bad { background: var(--red-soft); border-color: var(--red); }
+    .feedback strong { display: block; margin-bottom: 4px; }
+    .missing { margin-top: 8px; font-size: .93rem; }
+
+    .actions { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 24px; }
+    .actions-right { display: flex; gap: 10px; }
+
+    .results { max-width: 960px; margin: 0 auto; padding: clamp(38px, 7vw, 80px) 20px 70px; }
+    .results h1 { font-size: clamp(2rem, 5vw, 4rem); }
+    .score-row { display: grid; grid-template-columns: 220px 1fr; gap: clamp(28px, 6vw, 70px); align-items: center; margin: 32px 0 42px; }
+    .score-ring { width: 210px; height: 210px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--teal) 0deg, #dce7e4 0deg); position: relative; }
+    .score-ring::before { content: ""; position: absolute; inset: 16px; background: var(--paper); border-radius: 50%; }
+    .score-value { position: relative; text-align: center; }
+    .score-value strong { display: block; font-size: 3rem; line-height: 1; }
+    .score-value span { color: var(--muted); }
+    .result-message { font-size: 1.15rem; color: #40515c; }
+    .breakdown { border-top: 1px solid var(--line); }
+    .break-row { display: grid; grid-template-columns: minmax(180px, 1fr) 3fr 64px; align-items: center; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .break-bar { height: 10px; background: #dce7e4; border-radius: 5px; overflow: hidden; }
+    .break-bar i { display: block; height: 100%; background: var(--teal); }
+    .review-note { background: var(--yellow-soft); border-left: 5px solid #b37c00; padding: 16px; margin: 26px 0; }
+    .result-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    @keyframes arrive { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    @media (max-width: 800px) {
+      .topbar { align-items: flex-start; }
+      .top-progress { width: 42%; }
+      .welcome { grid-template-columns: 1fr; padding-top: 42px; }
+      .atom-stage { min-height: 300px; order: -1; }
+      .atom { width: min(76vw, 320px); }
+      .atom-label { display: none; }
+      .quiz-layout { grid-template-columns: 1fr; }
+      .navigator { position: static; }
+      .navigator h2, .legend { display: none; }
+      .question-dots { display: flex; overflow-x: auto; padding: 3px 3px 9px; }
+      .dot { flex: 0 0 34px; }
+      .score-row { grid-template-columns: 1fr; }
+      .score-ring { margin: auto; }
+    }
+    @media (max-width: 520px) {
+      .brand span { display: none; }
+      .topbar { padding: 11px 14px; }
+      .welcome { padding: 28px 18px 45px; }
+      .atom-stage { min-height: 240px; }
+      .question-panel { min-height: 0; }
+      .question-head, .question-body { padding-left: 18px; padding-right: 18px; }
+      .actions { align-items: stretch; flex-direction: column; }
+      .actions-right { display: grid; grid-template-columns: 1fr 1fr; }
+      .actions .primary, .actions .secondary, .actions .ghost { width: 100%; }
+      .break-row { grid-template-columns: 1fr 52px; }
+      .break-bar { grid-column: 1 / -1; grid-row: 2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark" aria-hidden="true"><i></i></div><div><strong>Fyzikální laboratoř</strong><span>6. ročník</span></div></div>
+      <div class="top-progress hidden" id="topProgress" aria-label="Postup testem">
+        <div class="progress-label"><span id="progressText">Úloha 1 z 25</span><span id="scoreText">0 bodů</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </header>
+
+    <main id="welcome" class="welcome">
+      <section class="welcome-copy">
+        <div class="eyebrow">25 úloh • přibližně 25 minut</div>
+        <h1>Prozkoumej látky, částice a měření</h1>
+        <p class="lead">Ověříš si nejen správné odpovědi, ale také to, zda umíš fyzikální jevy vysvětlit vlastními slovy. Chyba je informace: u náročnějších otázek dostaneš druhý pokus.</p>
+        <div class="topic-line" aria-label="Témata"><span>Látky a tělesa</span><span>Částice a atomy</span><span>Veličiny a měření</span></div>
+        <button class="primary" id="startBtn">Zahájit procvičování</button>
+      </section>
+      <section class="atom-stage" aria-label="Schéma atomu s jádrem a elektrony">
+        <p class="atom-label">Malé částice pomáhají vysvětlit vlastnosti látek, které pozorujeme kolem sebe.</p>
+        <div class="atom" aria-hidden="true">
+          <div class="orbit"></div><div class="orbit"></div><div class="orbit"></div>
+          <div class="nucleus"></div>
+          <div class="electron e1">−</div><div class="electron e2">−</div><div class="electron e3">−</div>
+        </div>
+      </section>
+    </main>
+
+    <main id="quiz" class="quiz-layout hidden">
+      <aside class="navigator" aria-label="Přehled úloh">
+        <h2>Přehled úloh</h2>
+        <div class="question-dots" id="questionDots"></div>
+        <div class="legend"><div><i style="background:#e6f4eb;border:1px solid #8dc4a4"></i>správně</div><div><i style="background:#fcebed;border:1px solid #dfa3a8"></i>k zopakování</div></div>
+      </aside>
+      <section class="question-panel" aria-live="polite">
+        <div class="question-head">
+          <div class="question-meta"><span class="category" id="category"></span><span id="questionCount"></span></div>
+        </div>
+        <div class="question-body" id="questionBody"></div>
+      </section>
+    </main>
+
+    <main id="results" class="results hidden"></main>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const questions = [
+      { cat:'Látky a tělesa', type:'single', q:'Která možnost správně rozlišuje těleso a látku?', options:['Skleněná láhev je těleso a sklo je látka.','Sklo je těleso a láhev je látka.','Láhev i sklo jsou jen látky.','Láhev i sklo jsou jen tělesa.'], answer:0, explain:'Těleso je konkrétní předmět s tvarem a rozměry. Látka je materiál, ze kterého je těleso vytvořeno.' },
+      { cat:'Látky a tělesa', type:'multi', q:'Vyber všechna tělesa.', hint:'Mohou být správné dvě nebo více možnosti.', options:['Kapka vody','Měď','Vzduch v nafouknutém míči','Dřevěná kostka','Dřevo'], answer:[0,2,3], explain:'Kapka, vzduch vymezený míčem a kostka jsou konkrétní tělesa. Měď a dřevo označují látky.' },
+      { cat:'Látky a tělesa', type:'open', q:'Vysvětli vlastními slovy rozdíl mezi tělesem a látkou. Uveď jeden příklad.', hint:'Napiš 2–3 věty.', groups:[['těles','predmet','předmět','objekt'],['látk','material','materiál'],['např','napriklad','například','je z','vyroben']], groupLabels:['co je těleso','co je látka','příklad vztahu tělesa a látky'], model:'Těleso je konkrétní předmět, který má tvar a rozměry. Látka je materiál, ze kterého je těleso. Například lžíce je těleso a ocel je látka.' },
+      { cat:'Skupenství látek', type:'single', q:'Které tvrzení platí pro kapaliny?', options:['Mají stálý tvar i stálý objem.','Nemají stálý tvar ani stálý objem.','Mají stálý objem, ale přizpůsobují tvar nádobě.','Mají stálý tvar, ale mění objem podle nádoby.'], answer:2, explain:'Kapalina si zachovává objem, ale její tvar určuje nádoba, ve které se nachází.' },
+      { cat:'Skupenství látek', type:'visual-single', visual:'solid', q:'Jaké skupenství znázorňuje částicový model?', options:['Pevné','Kapalné','Plynné','Nelze určit'], answer:0, explain:'Částice jsou těsně u sebe a pravidelně uspořádané. Kmitají kolem stálých poloh, což odpovídá pevné látce.' },
+      { cat:'Skupenství látek', type:'single', q:'Co se děje při tání ledu?', options:['Pevná látka se mění na kapalinu.','Kapalina se mění na plyn.','Plyn se mění na kapalinu.','Kapalina se mění na pevnou látku.'], answer:0, explain:'Tání je změna pevného skupenství na kapalné. Opačný děj se nazývá tuhnutí.' },
+      { cat:'Skupenství látek', type:'multi', q:'Které děje jsou změny skupenství?', options:['Tání čokolády','Rozříznutí papíru','Vypařování vody','Zmrznutí džusu','Rozdrcení křídy'], answer:[0,2,3], explain:'Při tání, vypařování a tuhnutí se mění skupenství. Řezání a drcení mění tvar nebo velikost tělesa.' },
+      { cat:'Skupenství látek', type:'open', q:'Proč se vůně parfému po čase rozšíří po celé místnosti?', hint:'Použij částicový model látky.', groups:[['částic','molekul'],['pohyb','pohybují','pohybuji'],['rozptyl','promích','šíří','siri','prostoru','vzduch']], groupLabels:['částice nebo molekuly','jejich neustálý pohyb','rozptylování a promíchávání se vzduchem'], model:'Částice parfému i vzduchu jsou v neustálém pohybu. Částice parfému se rozptylují a promíchávají se vzduchem, proto se vůně postupně dostane do celé místnosti.' },
+      { cat:'Částice, atomy a molekuly', type:'single', q:'Co je molekula?', options:['Částice tvořená dvěma nebo více spojenými atomy.','Nejmenší viditelná kapka kapaliny.','Jádro bez elektronů.','Libovolné malé těleso.'], answer:0, explain:'Molekulu tvoří spojené atomy. Například molekula vody H₂O se skládá ze dvou atomů vodíku a jednoho atomu kyslíku.' },
+      { cat:'Částice, atomy a molekuly', type:'single', q:'Kde se v atomu nacházejí protony a neutrony?', options:['Obíhají daleko od atomu.','V atomovém jádře.','Pouze v molekulách.','Mezi jednotlivými atomy.'], answer:1, explain:'Protony a neutrony tvoří atomové jádro. Elektrony se nacházejí v elektronovém obalu.' },
+      { cat:'Částice, atomy a molekuly', type:'multi', q:'Která tvrzení o částicích atomu jsou správná?', options:['Proton má kladný elektrický náboj.','Elektron má záporný elektrický náboj.','Neutron má kladný elektrický náboj.','Neutron je elektricky neutrální.','Elektron se nachází v jádře.'], answer:[0,1,3], explain:'Proton je kladný, elektron záporný a neutron nemá elektrický náboj. Protony a neutrony jsou v jádře, elektrony v obalu.' },
+      { cat:'Částice, atomy a molekuly', type:'number', q:'Neutrální atom má 8 protonů. Kolik má elektronů?', suffix:'elektronů', answers:['8','osm'], explain:'V elektricky neutrálním atomu je počet kladných protonů stejný jako počet záporných elektronů.' },
+      { cat:'Částice, atomy a molekuly', type:'open', q:'Popiš jednoduchý model atomu: kde jsou protony, neutrony a elektrony a jaký mají náboj?', hint:'Stačí 2–4 věty.', groups:[['jád','jad'],['proton','klad','+'],['neutron','neutr','bez náboje','bez naboje'],['elektron','zápor','zapor','−','-','obal']], groupLabels:['jádro atomu','proton a jeho kladný náboj','neutron bez náboje','elektron se záporným nábojem v obalu'], model:'V jádře atomu jsou kladně nabité protony a neutrony bez elektrického náboje. V elektronovém obalu se nacházejí záporně nabité elektrony.' },
+      { cat:'Částice, atomy a molekuly', type:'sort', q:'Seřaď od nejmenšího celku k největšímu.', items:['molekula vody','atom vodíku','kapka vody'], answer:['atom vodíku','molekula vody','kapka vody'], explain:'Atom vodíku může být součástí molekuly vody. Obrovské množství molekul vody potom tvoří kapku.' },
+      { cat:'Fyzikální veličiny a jednotky', type:'single', q:'Co je fyzikální veličina?', options:['Vlastnost tělesa nebo jevu, kterou lze měřit.','Každé číslo napsané s jednotkou.','Přístroj používaný v laboratoři.','Pouze délka, hmotnost a čas.'], answer:0, explain:'Fyzikální veličina je měřitelná vlastnost, například délka, objem, hmotnost, čas nebo teplota.' },
+      { cat:'Fyzikální veličiny a jednotky', type:'matching', q:'Přiřaď každé veličině běžně používanou jednotku.', pairs:[['délka','metr (m)'],['hmotnost','kilogram (kg)'],['čas','sekunda (s)'],['teplota','stupeň Celsia (°C)']], distractors:['litr (l)','centimetr (cm)'], explain:'V běžné školní fyzice zapisujeme délku v metrech, hmotnost v kilogramech, čas v sekundách a teplotu často ve stupních Celsia. Základní jednotkou teploty v soustavě SI je kelvin (K).' },
+      { cat:'Fyzikální veličiny a jednotky', type:'number', q:'Převeď 2,5 m na centimetry.', suffix:'cm', answers:['250','250,0','250.0'], explain:'Jeden metr má 100 centimetrů, proto 2,5 × 100 = 250 cm.' },
+      { cat:'Fyzikální veličiny a jednotky', type:'number', q:'Převeď 750 g na kilogramy.', suffix:'kg', answers:['0,75','0.75','0,750','0.750'], explain:'Jeden kilogram má 1000 gramů. Proto 750 ÷ 1000 = 0,75 kg.' },
+      { cat:'Fyzikální veličiny a jednotky', type:'multi', q:'Které zápisy výsledku měření jsou úplné?', options:['Délka stolu je 120.','Délka stolu je 120 cm.','m = 35 kg','Teplota je °C.','Čas běhu je 14,2 s.'], answer:[1,2,4], explain:'Úplný výsledek obsahuje číselnou hodnotu i jednotku. Samotné číslo nebo samotná jednotka nestačí.' },
+      { cat:'Měření a chyby měření', type:'single', q:'Kterým přístrojem nejvhodněji změříš průměr tužky?', options:['Kuchyňskými hodinami','Teploměrem','Posuvným měřítkem','Odměrným válcem'], answer:2, explain:'Posuvné měřítko je vhodné k přesnějšímu měření malých délek a průměrů.' },
+      { cat:'Měření a chyby měření', type:'visual-number', q:'Jakou hodnotu ukazuje červená značka na stupnici?', hint:'Nezapomeň na jednotku, ta je uvedena za polem.', suffix:'cm', answers:['2,5','2.5'], explain:'Mezi 2 cm a 3 cm je jeden dílek, který představuje polovinu centimetru. Značka tedy ukazuje 2,5 cm.' },
+      { cat:'Měření a chyby měření', type:'single', q:'Teploměr má nejmenší dílek 1 °C. Který zápis nejlépe odpovídá jeho přesnosti?', options:['21,374 °C','21 °C','přesně 21,000 °C','asi 20 až 30 °C'], answer:1, explain:'Z přístroje s dílky po 1 °C nemůžeme spolehlivě odečíst tisíciny stupně. Přiměřený zápis je 21 °C.' },
+      { cat:'Měření a chyby měření', type:'number', q:'Třikrát změříš délku: 12,1 cm; 12,3 cm; 12,2 cm. Jaký je aritmetický průměr?', suffix:'cm', answers:['12,2','12.2'], explain:'Průměr je (12,1 + 12,3 + 12,2) ÷ 3 = 36,6 ÷ 3 = 12,2 cm.' },
+      { cat:'Měření a chyby měření', type:'multi', q:'Co může způsobit chybu měření délky pravítkem?', options:['Díváme se na stupnici šikmo.','Začátek tělesa není u nuly stupnice.','Měření zopakujeme vícekrát.','Pravítko je poškozené.','Výsledek zapíšeme i s jednotkou.'], answer:[0,1,3], explain:'Chybu může způsobit šikmý pohled, špatné přiložení nebo poškozené měřidlo. Opakování měření obvykle pomáhá náhodnou chybu odhalit.' },
+      { cat:'Měření a chyby měření', type:'open', q:'Spolužáci naměřili délku lavice 119,8 cm, 120,1 cm a 125,0 cm. Jak bys s výsledky naložil a proč?', hint:'Vysvětli, který údaj je podezřelý a jak získat spolehlivější výsledek.', groups:[['125','podezř','odleh','chybn','výrazně'],['opak','znovu','přeměř'],['průměr','prumer','119,8','120,1','120']], groupLabels:['odhalení podezřelé hodnoty 125,0 cm','opakování nebo kontrola měření','průměr shodujících se hodnot přibližně 120 cm'], model:'Hodnota 125,0 cm je proti ostatním podezřelá, proto bych toto měření zkontroloval a zopakoval. Pokud se nepotvrdí, použil bych průměr shodných měření 119,8 cm a 120,1 cm, tedy přibližně 120,0 cm.' }
+    ];
+
+    const state = { index: 0, score: 0, answers: Array(questions.length).fill(null), attempts: Array(questions.length).fill(0), order: [] };
+    const $ = sel => document.querySelector(sel);
+    const normalize = text => String(text).toLocaleLowerCase('cs-CZ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+
+    function init() {
+      state.order = questions.map((_,i) => i);
+      renderDots();
+      $('#startBtn').addEventListener('click', start);
+    }
+
+    function start() {
+      $('#welcome').classList.add('hidden');
+      $('#quiz').classList.remove('hidden');
+      $('#topProgress').classList.remove('hidden');
+      renderQuestion();
+    }
+
+    function renderDots() {
+      $('#questionDots').innerHTML = questions.map((_,i) => `<button class="dot" data-index="${i}" aria-label="Přejít na úlohu ${i+1}">${i+1}</button>`).join('');
+      document.querySelectorAll('.dot').forEach(btn => btn.addEventListener('click', () => { state.index = Number(btn.dataset.index); renderQuestion(); }));
+    }
+
+    function updateChrome() {
+      const answered = state.answers.filter(Boolean).length;
+      $('#progressText').textContent = `Vyřešeno ${answered} z ${questions.length}`;
+      $('#scoreText').textContent = `${state.score} ${state.score === 1 ? 'bod' : state.score < 5 ? 'body' : 'bodů'}`;
+      $('#progressFill').style.width = `${answered / questions.length * 100}%`;
+      document.querySelectorAll('.dot').forEach((dot,i) => {
+        dot.className = 'dot' + (i === state.index ? ' current' : '') + (state.answers[i] ? (state.answers[i].correct ? ' done' : ' wrong') : '');
+        dot.setAttribute('aria-current', i === state.index ? 'step' : 'false');
+      });
+    }
+
+    function renderQuestion() {
+      const q = questions[state.index];
+      $('#category').textContent = q.cat;
+      $('#questionCount').textContent = `Úloha ${state.index + 1} z ${questions.length}`;
+      updateChrome();
+      let input = '';
+      const saved = state.answers[state.index];
+      if (q.type === 'single' || q.type === 'visual-single') input = renderOptions(q, false, saved);
+      if (q.type === 'multi') input = renderOptions(q, true, saved);
+      if (q.type === 'open') input = `<label class="sr-only" for="openAnswer">Tvoje vysvětlení</label><textarea id="openAnswer" class="text-answer" maxlength="700" placeholder="Napiš své vysvětlení…" ${saved?'disabled':''}>${saved ? escapeHtml(saved.value) : ''}</textarea>`;
+      if (q.type === 'number' || q.type === 'visual-number') input = `<div class="unit-row"><label class="sr-only" for="numberAnswer">Číselná odpověď</label><input id="numberAnswer" class="text-answer" inputmode="decimal" autocomplete="off" placeholder="Výsledek" value="${saved ? escapeHtml(saved.value) : ''}" ${saved?'disabled':''}><span class="unit-badge">${q.suffix}</span></div>`;
+      if (q.type === 'sort') input = renderSort(q, saved);
+      if (q.type === 'matching') input = renderMatching(q, saved);
+
+      $('#questionBody').innerHTML = `
+        <h2 id="questionTitle">${q.q}</h2>
+        <p class="instruction">${q.hint || instructionFor(q.type)}</p>
+        ${renderVisual(q)}
+        <div id="answerArea">${input}</div>
+        <div id="feedbackArea">${saved ? feedbackHtml(q, saved) : ''}</div>
+        <div class="actions">
+          <button class="ghost" id="skipBtn" ${saved?'disabled':''}>Přeskočit</button>
+          <div class="actions-right">
+            <button class="secondary" id="prevBtn" ${state.index===0?'disabled':''}>Předchozí</button>
+            ${saved ? `<button class="primary" id="nextBtn">${state.index === questions.length-1 ? 'Vyhodnotit' : 'Další úloha'}</button>` : '<button class="primary" id="checkBtn">Zkontrolovat</button>'}
+          </div>
+        </div>`;
+      bindQuestionEvents(q);
+      $('#questionTitle').focus?.();
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function instructionFor(type) {
+      if (type === 'multi') return 'Vyber všechny správné možnosti.';
+      if (type === 'sort') return 'Pomocí šipek změň pořadí položek.';
+      if (type === 'matching') return 'U každé veličiny zvol jednotku.';
+      if (type === 'open') return 'Odpověz vlastními slovy.';
+      if (type.includes('number')) return 'Zapiš číselnou hodnotu.';
+      return 'Vyber jednu správnou možnost.';
+    }
+
+    function renderVisual(q) {
+      if (q.type === 'visual-single') {
+        return `<div class="visual-box" aria-label="Částice těsně vedle sebe v pravidelných řadách"><div class="particles ${q.visual}">${Array(20).fill('<i class="particle"></i>').join('')}</div></div>`;
+      }
+      if (q.type === 'visual-number') {
+        return `<div class="visual-box" aria-label="Stupnice od nuly do čtyř centimetrů, červená značka je uprostřed mezi dvěma a třemi"><div class="measure-line"><i class="tick major" style="left:0%"><span>0</span></i><i class="tick" style="left:12.5%"><span>0,5</span></i><i class="tick major" style="left:25%"><span>1</span></i><i class="tick" style="left:37.5%"><span>1,5</span></i><i class="tick major" style="left:50%"><span>2</span></i><i class="tick" style="left:62.5%"><span>2,5</span></i><i class="pointer"></i><i class="tick major" style="left:75%"><span>3</span></i><i class="tick" style="left:87.5%"><span>3,5</span></i><i class="tick major" style="left:100%"><span>4 cm</span></i></div></div>`;
+      }
+      return '';
+    }
+
+    function renderOptions(q, multi, saved) {
+      const values = saved ? saved.value : [];
+      return `<div class="options ${multi?'multi':''}" role="${multi?'group':'radiogroup'}">${q.options.map((o,i) => {
+        const chosen = values.includes(i);
+        const isCorrect = Array.isArray(q.answer) ? q.answer.includes(i) : q.answer === i;
+        const cls = saved ? (isCorrect ? ' correct' : chosen ? ' incorrect' : '') : (chosen ? ' selected' : '');
+        return `<button class="option${cls}" data-choice="${i}" role="${multi?'checkbox':'radio'}" aria-checked="${chosen}" ${saved?'disabled':''}><span class="choice-mark">${saved && isCorrect ? '✓' : saved && chosen ? '×' : chosen ? '✓' : ''}</span><span>${o}</span></button>`;
+      }).join('')}</div>`;
+    }
+
+    function renderSort(q, saved) {
+      const items = saved ? saved.value : (state.tempSort || q.items.slice());
+      state.tempSort = items.slice();
+      return `<div class="sort-list">${items.map((item,i) => `<div class="sort-item"><span class="sort-index">${i+1}.</span><span>${item}</span><button class="move" data-move="up" data-pos="${i}" aria-label="Posunout ${item} nahoru" ${saved||i===0?'disabled':''}>↑</button><button class="move" data-move="down" data-pos="${i}" aria-label="Posunout ${item} dolů" ${saved||i===items.length-1?'disabled':''}>↓</button></div>`).join('')}</div>`;
+    }
+
+    function renderMatching(q, saved) {
+      const prior = saved ? saved.value : {};
+      const all = [...q.pairs.map(p=>p[1]), ...q.distractors];
+      return `<div class="options">${q.pairs.map(([name],i) => `<label class="sort-item" style="grid-template-columns:minmax(90px,1fr) 2fr"><strong>${name}</strong><select class="text-answer match" data-pair="${i}" ${saved?'disabled':''}><option value="">Vyber jednotku</option>${all.map(x=>`<option value="${escapeHtml(x)}" ${prior[i]===x?'selected':''}>${x}</option>`).join('')}</select></label>`).join('')}</div>`;
+    }
+
+    function bindQuestionEvents(q) {
+      document.querySelectorAll('.option:not(:disabled)').forEach(btn => btn.addEventListener('click', () => {
+        if (q.type === 'multi') {
+          btn.classList.toggle('selected');
+          btn.setAttribute('aria-checked', btn.classList.contains('selected'));
+          btn.querySelector('.choice-mark').textContent = btn.classList.contains('selected') ? '✓' : '';
+        } else {
+          document.querySelectorAll('.option').forEach(x => { x.classList.remove('selected'); x.setAttribute('aria-checked','false'); x.querySelector('.choice-mark').textContent=''; });
+          btn.classList.add('selected'); btn.setAttribute('aria-checked','true'); btn.querySelector('.choice-mark').textContent='✓';
+        }
+      }));
+      document.querySelectorAll('.move:not(:disabled)').forEach(btn => btn.addEventListener('click', () => {
+        const pos = Number(btn.dataset.pos), next = btn.dataset.move === 'up' ? pos-1 : pos+1;
+        [state.tempSort[pos], state.tempSort[next]] = [state.tempSort[next], state.tempSort[pos]];
+        document.querySelector('#answerArea').innerHTML = renderSort(q, null);
+        bindMoveOnly(q);
+      }));
+      $('#checkBtn')?.addEventListener('click', () => checkAnswer(q));
+      $('#skipBtn')?.addEventListener('click', goNextUnanswered);
+      $('#prevBtn')?.addEventListener('click', () => { state.index--; state.tempSort=null; renderQuestion(); });
+      $('#nextBtn')?.addEventListener('click', nextOrFinish);
+      $('#numberAnswer')?.addEventListener('keydown', e => { if (e.key === 'Enter') checkAnswer(q); });
+    }
+
+    function bindMoveOnly(q) {
+      document.querySelectorAll('.move:not(:disabled)').forEach(btn => btn.addEventListener('click', () => {
+        const pos = Number(btn.dataset.pos), next = btn.dataset.move === 'up' ? pos-1 : pos+1;
+        [state.tempSort[pos], state.tempSort[next]] = [state.tempSort[next], state.tempSort[pos]];
+        $('#answerArea').innerHTML = renderSort(q, null); bindMoveOnly(q);
+      }));
+    }
+
+    function collect(q) {
+      if (q.type === 'single' || q.type === 'visual-single' || q.type === 'multi') return [...document.querySelectorAll('.option.selected')].map(x=>Number(x.dataset.choice));
+      if (q.type === 'open') return $('#openAnswer').value.trim();
+      if (q.type === 'number' || q.type === 'visual-number') return $('#numberAnswer').value.trim();
+      if (q.type === 'sort') return state.tempSort.slice();
+      if (q.type === 'matching') return Object.fromEntries([...document.querySelectorAll('.match')].map(x=>[x.dataset.pair,x.value]));
+    }
+
+    function checkAnswer(q) {
+      const value = collect(q);
+      if (!hasValue(q,value)) { showLive('Nejdříve zvol nebo napiš odpověď.', 'try'); return; }
+      state.attempts[state.index]++;
+      let correct = false, missing = [];
+      if (q.type === 'single' || q.type === 'visual-single') correct = value.length === 1 && value[0] === q.answer;
+      if (q.type === 'multi') correct = sameSet(value,q.answer);
+      if (q.type === 'number' || q.type === 'visual-number') correct = q.answers.map(normalize).includes(normalize(value));
+      if (q.type === 'sort') correct = value.every((x,i)=>x===q.answer[i]);
+      if (q.type === 'matching') correct = q.pairs.every((p,i)=>value[i]===p[1]);
+      if (q.type === 'open') {
+        const n = normalize(value);
+        missing = q.groups.map((g,i)=>g.some(k=>n.includes(normalize(k))) ? null : q.groupLabels[i]).filter(Boolean);
+        correct = missing.length === 0;
+        if (!correct && state.attempts[state.index] < 2) {
+          showLive(`Ještě to není úplné. Doplň: ${missing.join(', ')}.`, 'try', true);
+          return;
+        }
+      }
+      saveAnswer(q,value,correct,missing);
+    }
+
+    function saveAnswer(q,value,correct,missing=[]) {
+      state.answers[state.index] = { value, correct, missing };
+      if (correct) state.score++;
+      state.tempSort = null;
+      renderQuestion();
+    }
+
+    function hasValue(q,v) {
+      if (Array.isArray(v)) return v.length > 0;
+      if (q.type === 'matching') return Object.values(v).every(Boolean);
+      return String(v).trim().length > 0;
+    }
+    function sameSet(a,b) { return a.length===b.length && a.every(x=>b.includes(x)); }
+
+    function showLive(text, kind, includeHint=false) {
+      $('#feedbackArea').innerHTML = `<div class="feedback ${kind}" role="alert"><strong>${kind==='try'?'Zkus to ještě jednou':'Upozornění'}</strong>${text}${includeHint?'<div class="missing">Uprav svou odpověď a znovu ji zkontroluj.</div>':''}</div>`;
+    }
+
+    function feedbackHtml(q,a) {
+      if (a.correct) return `<div class="feedback good" role="status"><strong>Správně.</strong>${q.explain || q.model}</div>`;
+      const extra = q.type === 'open' ? `<div class="missing"><strong>Vzor možné odpovědi:</strong> ${q.model}</div>` : '';
+      return `<div class="feedback bad" role="status"><strong>Tady je potřeba učivo ještě upevnit.</strong>${q.explain || 'Porovnej svou odpověď se vzorem.'}${extra}</div>`;
+    }
+
+    function goNextUnanswered() {
+      const next = state.answers.findIndex((a,i)=>!a && i>state.index);
+      if (next >= 0) state.index = next;
+      else {
+        const first = state.answers.findIndex(a=>!a);
+        if (first >= 0) state.index = first; else return showResults();
+      }
+      state.tempSort=null; renderQuestion();
+    }
+
+    function nextOrFinish() {
+      if (state.index < questions.length-1) { state.index++; state.tempSort=null; renderQuestion(); }
+      else {
+        const first = state.answers.findIndex(a=>!a);
+        if (first >= 0) { state.index=first; state.tempSort=null; renderQuestion(); }
+        else showResults();
+      }
+    }
+
+    function showResults() {
+      $('#quiz').classList.add('hidden'); $('#topProgress').classList.add('hidden'); $('#results').classList.remove('hidden');
+      const cats = [...new Set(questions.map(q=>q.cat))];
+      const breakdown = cats.map(cat => {
+        const ids = questions.map((q,i)=>q.cat===cat?i:-1).filter(i=>i>=0);
+        const got = ids.filter(i=>state.answers[i]?.correct).length;
+        return {cat,got,total:ids.length,pct:Math.round(got/ids.length*100)};
+      });
+      const pct = Math.round(state.score/questions.length*100);
+      const message = pct >= 88 ? 'Výborně rozumíš pojmům i souvislostem. Zaměř se jen na jednotlivé nepřesnosti.' : pct >= 68 ? 'Základům rozumíš. Projdi si témata s nižším výsledkem a zkus vysvětlení formulovat ještě přesněji.' : 'Některé základy už máš. Vrať se k označeným úlohám, přečti si vysvětlení a procvičování později zopakuj.';
+      $('#results').innerHTML = `<div class="eyebrow">Závěrečné vyhodnocení</div><h1>Hotovo. Teď víš, co už umíš a co ještě procvičit.</h1>
+        <div class="score-row"><div class="score-ring" style="background:conic-gradient(var(--teal) ${pct*3.6}deg,#dce7e4 0deg)"><div class="score-value"><strong>${state.score}/25</strong><span>${pct} %</span></div></div><p class="result-message">${message}</p></div>
+        <h2>Výsledek podle témat</h2><div class="breakdown">${breakdown.map(x=>`<div class="break-row"><strong>${x.cat}</strong><div class="break-bar"><i style="width:${x.pct}%"></i></div><span>${x.got}/${x.total}</span></div>`).join('')}</div>
+        <div class="review-note">Červeně označené úlohy si můžeš znovu projít. Výsledek slouží k učení, není to školní známka.</div>
+        <div class="result-actions"><button class="primary" id="reviewBtn">Projít odpovědi</button><button class="secondary" id="restartBtn">Začít znovu</button></div>`;
+      $('#reviewBtn').addEventListener('click', () => { $('#results').classList.add('hidden'); $('#quiz').classList.remove('hidden'); $('#topProgress').classList.remove('hidden'); state.index=0; renderQuestion(); });
+      $('#restartBtn').addEventListener('click', () => location.reload());
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function escapeHtml(s) { return String(s).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+    init();
+  })();
+  </script>
+</body>
+</html>
